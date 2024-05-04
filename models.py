@@ -4,10 +4,10 @@ import torch.nn.functional as F
 from pytorch_lightning import LightningModule
 import numpy as np
 
-class ConvVAEModule(nn.Module):
+class ConvVAE(nn.Module):
     #from https://github.com/probml/pyprobml/blob/a662f44e891fa6f30ed1184558fd84efc42c8a56/deprecated/vae/standalone/vae_conv_mnist.py#L128
     def __init__(self, input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim, deterministic=False):
-        super(ConvVAEModule, self).__init__()
+        super(ConvVAE, self).__init__()
         self.input_shape = input_shape
 
         self.latent_dim = latent_dim
@@ -116,24 +116,21 @@ class ConvVAEModule(nn.Module):
             return recon, mu, log_var
 
 
-class ConvVAE(LightningModule):
+class ConvVAEModule(LightningModule):
     def __init__(self, input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim, kl_coeff=0.1, lr=0.001):
-        super(ConvVAE, self).__init__()
+        super(ConvVAEModule, self).__init__()
         self.kl_coeff = kl_coeff
         self.lr = lr
-        self.vae = ConvVAEModule(input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim)
+        self.vae = ConvVAE(input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim)
 
     def step(self, batch, batch_idx):
         x, y = batch
         z, x_hat, p, q = self.vae._run_step(x)
 
-        recon_loss = F.binary_cross_entropy(x_hat, x, reduction="sum")
+        recon_loss = F.mse_loss(x_hat, x, reduction="sum")
 
-        log_qz = q.log_prob(z)
-        log_pz = p.log_prob(z)
-
-        kl = log_qz - log_pz
-        kl = kl.sum()  # I tried sum, here
+        kl = torch.distributions.kl.kl_divergence(q, p)
+        kl = kl.sum()  
         kl *= self.kl_coeff
 
         loss = kl + recon_loss
@@ -153,6 +150,11 @@ class ConvVAE(LightningModule):
     def validation_step(self, batch, batch_idx):
         loss, logs = self.step(batch, batch_idx)
         self.log_dict({f"val_{k}": v for k, v in logs.items()})
+        return loss
+    
+    def test_step(self, batch, batch_idx):
+        loss, logs = self.step(batch, batch_idx)
+        self.log_dict({f"test_{k}": v for k, v in logs.items()})
         return loss
 
     def configure_optimizers(self):
