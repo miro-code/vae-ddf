@@ -1,7 +1,6 @@
 from torchvision.datasets import CIFAR10
 from torch.utils.data import DataLoader
 from torchvision import transforms
-import torch
 from torchvision.datasets import MNIST
 import pytorch_lightning as pl
 from torch.utils.data import random_split

@@ -17,7 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--latent-dim", type=int, default=8, help="size of latent dim for our vae")
     parser.add_argument("--lr", type=float, default=0.001, help="learning rate")
     parser.add_argument("--kl-coeff", type=int, default=5, help="kl coeff aka beta term in the elbo loss function")
-    parser.add_argument("--output_dir", type=str, default=os.path.join("results", 'failure_demo'), help="output directory")
+    parser.add_argument("--output_dir", type=str, default=os.path.join("results", 'vae'), help="output directory")
     parser.add_argument("--anomaly_detect", help="Detect anomalies", action="store_true", default=False)
     parser.add_argument("--name", type=str, default="vae-for-ddf", help="wandb name of the run")
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint to load")
@@ -77,4 +77,3 @@ if __name__ == "__main__":
     wandb_logger.save()
     wandb_logger.finalize()
 
-    
