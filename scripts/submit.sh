@@ -1,11 +1,11 @@
 #! /bin/bash
 #SBATCH --nodes=1
 #SBATCH --clusters=htc
-#SBATCH --job-name=megalodon
+#SBATCH --job-name=vae-for-ddf
 #SBATCH --time=11:59:00
 #SBATCH --gres=gpu:1
 #SBATCH --partition=short
-#SBATCH --account=coml-oxmedis
+#SBATCH --account=engs-pnpl
 #SBATCH --output=slurm_out/%j.out
 
 module load Anaconda3/2022.10

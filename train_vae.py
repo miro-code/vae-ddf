@@ -8,8 +8,9 @@ from models import ConvVAEModule
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from datasets import DATAMODULES
+#from datasets import DEBUGDATAMODULES as DATAMODULES #TODO change
 import os
-
+from utils import embed
 
 
 if __name__ == "__main__":
@@ -24,8 +25,9 @@ if __name__ == "__main__":
     parser.add_argument("--name", type=str, default="vae-for-ddf", help="wandb name of the run")
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint to load")
     parser.add_argument("--dataset", type=str, default="mnist", help="dataset to use", choices=DATAMODULES.keys())
+    parser.add_argument("--seed", type=int, default=42, help="random seed")
     args = parser.parse_args()
-    seed_everything(42)
+    seed_everything(args.seed)
     os.makedirs(args.output_dir, exist_ok=True)
     wandb_logger = WandbLogger(
     name=args.name,
@@ -34,7 +36,7 @@ if __name__ == "__main__":
     log_model=True,  # Log checkpoint only at the end of training (to stop my wandb running out of storage!)
     )
     #args without name and output_dir
-    config = vars(args)
+    config = vars(args).copy()
     config.pop("name")
     config.pop("output_dir")
     wandb_logger.experiment.config.update(config)
@@ -58,6 +60,7 @@ if __name__ == "__main__":
         every_n_epochs=1,
         save_top_k=1,
     )
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = ConvVAEModule(**model_params)
@@ -77,4 +80,29 @@ if __name__ == "__main__":
         ckpt_path=args.checkpoint,
         )
     trainer.test(datamodule=datamodule)
+    
+    import numpy as np
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import train_test_split
+    vae = model.vae
+    train_dataloader = datamodule.train_dataloader()
+    val_dataloader = datamodule.val_dataloader()
+    X_train, y_train = embed(vae, train_dataloader)
+    X_train, _, y_train, _ = train_test_split(X_train, y_train, train_size=100, stratify=y_train)
+    X_test, y_test = embed(vae, val_dataloader, deterministic=True)
 
+    X_train_deterministic, y_train_deterministic = embed(vae, train_dataloader, deterministic=True)
+    np.savez(os.path.join(args.output_dir, "embeddings"), X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, X_train_deterministic=X_train_deterministic, y_train_deterministic=y_train_deterministic)
+
+    rf = RandomForestClassifier(random_state=args.seed)
+    rf.fit(X_train, y_train)
+    y_pred = rf.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Multi-sample Accuracy: {acc}")
+
+    rf_deterministic = RandomForestClassifier(random_state=args.seed)
+    rf_deterministic.fit(X_train_deterministic, y_train_deterministic)
+    y_pred = rf_deterministic.predict(X_test)
+    acc = accuracy_score(y_test, y_pred)
+    print(f"Deterministic Accuracy: {acc}")

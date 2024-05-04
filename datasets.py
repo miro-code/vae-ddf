@@ -51,11 +51,12 @@ class MNISTDebugDataModule(MNISTDataModule):
         super().__init__(data_dir, batch_size)
 
     def setup(self, stage: str):
-        self.mnist_test = MNIST(self.data_dir, train=False, transform=MNIST_TRANSFORMS, download=True)
         mnist_full = MNIST(self.data_dir, train=True, transform=MNIST_TRANSFORMS, download=True)
         self.mnist_train, self.mnist_val, _ = random_split(
             mnist_full, [400, 100, 59500], generator=torch.Generator().manual_seed(42)
         )
+        self.mnist_test = MNIST(self.data_dir, train=False, transform=MNIST_TRANSFORMS, download=True)
+        self.mnist_test, _ = random_split(self.mnist_test, [100, 9900], generator=torch.Generator().manual_seed(42))
 
 class CIFAR10DataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str = "data", batch_size: int = 512):
@@ -84,11 +85,12 @@ class CIFAR10DebugDataModule(CIFAR10DataModule):
         super().__init__(data_dir, batch_size)
 
     def setup(self, stage: str):
-        self.cifar10_test = CIFAR10(self.data_dir, train=False, transform=CIFAR10_TRANSFORMS, download=True)
         cifar10_full = CIFAR10(self.data_dir, train=True, transform=CIFAR10_TRANSFORMS, download=True)
         self.cifar10_train, self.cifar10_val, _ = random_split(
             cifar10_full, [400, 100, 59500], generator=torch.Generator().manual_seed(42)
         )
+        self.cifar10_test = CIFAR10(self.data_dir, train=False, transform=CIFAR10_TRANSFORMS, download=True)
+        self.cifar10_test, _ = random_split(self.cifar10_test, [100, 9900], generator=torch.Generator().manual_seed(42))
 
 class CIFAR100DataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str = "data", batch_size: int = 512):
@@ -117,14 +119,20 @@ class CIFAR10DebugDataModule(CIFAR10DataModule):
         super().__init__(data_dir, batch_size)
 
     def setup(self, stage: str):
-        self.cifar100_test = CIFAR10(self.data_dir, train=False, transform=CIFAR10_TRANSFORMS, download=True)
         cifar100_full = CIFAR10(self.data_dir, train=True, transform=CIFAR10_TRANSFORMS, download=True)
         self.cifar100_train, self.cifar100_val, _ = random_split(
             cifar100_full, [400, 100, 59500], generator=torch.Generator().manual_seed(42)
         )
+        self.cifar100_test = CIFAR10(self.data_dir, train=False, transform=CIFAR10_TRANSFORMS, download=True)
+        self.cifar100_test, _ = random_split(self.cifar100_test, [100, 9900], generator=torch.Generator().manual_seed(42))
 
 DATAMODULES = {
     "mnist": MNISTDataModule,
     "cifar10": CIFAR10DataModule,
+    "cifar100": CIFAR100DataModule,
+}
+DEBUGDATAMODULES = {
+    "mnist": MNISTDebugDataModule,
+    "cifar10": CIFAR10DebugDataModule,
     "cifar100": CIFAR100DataModule,
 }
