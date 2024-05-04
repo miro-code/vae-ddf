@@ -7,8 +7,6 @@ from argparse import ArgumentParser
 from models import ConvVAEModule
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
-from datasets import MNISTDataModule, CIFAR10DataModule, CIFAR100DataModule
-#from datasets import MNISTDebugDataModule as MNISTDataModule #TODO CHANGE
 from datasets import DATAMODULES
 import os
 
@@ -72,7 +70,7 @@ if __name__ == "__main__":
         detect_anomaly=args.anomaly_detect,
         max_epochs=args.epochs,
     )
-    datamodule = MNISTDataModule(batch_size=args.batch_size)
+    datamodule = DATAMODULES[args.dataset](batch_size=args.batch_size)
     trainer.fit(
         model, 
         datamodule=datamodule,

@@ -119,9 +119,11 @@ class ConvVAE(nn.Module):
 class ConvVAEModule(LightningModule):
     def __init__(self, input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim, kl_coeff=0.1, lr=0.001):
         super(ConvVAEModule, self).__init__()
+        self.save_hyperparameters()
         self.kl_coeff = kl_coeff
         self.lr = lr
         self.vae = ConvVAE(input_shape, encoder_conv_filters, decoder_conv_t_filters, latent_dim)
+        
 
     def step(self, batch, batch_idx):
         x, y = batch
