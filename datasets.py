@@ -38,7 +38,7 @@ class MNISTDataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self.mnist_train, batch_size=self.batch_size)
+        return DataLoader(self.mnist_train, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.mnist_val, batch_size=self.batch_size)
@@ -72,7 +72,7 @@ class CIFAR10DataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self.cifar10_train, batch_size=self.batch_size)
+        return DataLoader(self.cifar10_train, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.cifar10_val, batch_size=self.batch_size)
@@ -106,7 +106,7 @@ class CIFAR100DataModule(pl.LightningDataModule):
         )
 
     def train_dataloader(self):
-        return DataLoader(self.cifar100_train, batch_size=self.batch_size)
+        return DataLoader(self.cifar100_train, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
         return DataLoader(self.cifar100_val, batch_size=self.batch_size)
