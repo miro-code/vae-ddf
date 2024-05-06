@@ -13,7 +13,7 @@ import os
 from vae_embed import embed_dataset
 
 if __name__ == "__main__":
-    parser = ArgumentParser(prog="VAE for DDF", description="Train VAE for downstream use with differential decision forests")
+    parser = ArgumentParser(prog="vae-for-ddf", description="Train VAE for downstream use with differential decision forests")
     parser.add_argument("--batch-size", type=int, default=512, help="batch size")
     parser.add_argument("--epochs", type=int, default=50, help="num epochs")
     parser.add_argument("--latent-dim", type=int, default=32, help="size of latent dim for our vae")
@@ -81,6 +81,6 @@ if __name__ == "__main__":
     trainer.test(datamodule=datamodule)
 
     embeddings_path = os.path.join(args.output_dir, args.dataset + "_embeddings.npz")
-    embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_path=embeddings_path)
+    embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_path=embeddings_path, device=device)
 
     
