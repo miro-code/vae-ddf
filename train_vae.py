@@ -8,7 +8,7 @@ from models import ConvVAEModule
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from datasets import DATAMODULES
-#from datasets import DEBUGDATAMODULES as DATAMODULES #TODO change
+from datasets import DEBUGDATAMODULES as DATAMODULES #TODO change
 import os
 from vae_embed import embed_dataset
 
@@ -79,7 +79,8 @@ if __name__ == "__main__":
         ckpt_path=args.checkpoint,
         )
     trainer.test(datamodule=datamodule)
-    
-    embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_dir=args.output_dir)
+
+    embeddings_path = os.path.join(args.output_dir, args.dataset + "_embeddings.npz")
+    embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_path=embeddings_path)
 
     
