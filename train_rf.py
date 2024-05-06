@@ -4,11 +4,19 @@ from sklearn.metrics import accuracy_score
 from datasets import DATAMODULES
 import os
 import torch
-from models import ConvVAEModule
 import numpy as np
-from utils import embed
 
 
+def sample_from_posterior(mean, logvar, y, deterministic=False, n_samples=5):
+    if(deterministic):
+        return mean, y
+    X = []
+    for i in range(n_samples):
+        std = np.exp(0.5 * logvar)
+        X.append(np.random.normal(mean, std))
+    X = np.concatenate(X, dim=0)
+    y = np.repeat(y, repeats = n_samples)
+    return X, y
 
 if __name__ == "__main__":
     parser = ArgumentParser(prog="VAE for DDF", description="Train VAE for downstream use with differential decision forests")
@@ -17,7 +25,7 @@ if __name__ == "__main__":
     parser.add_argument("--checkpoint", type=str, default=None, help="checkpoint to load")
     parser.add_argument("--dataset", type=str, default="mnist", help="dataset to use", choices=DATAMODULES.keys())
     parser.add_argument("--samples-per-image", type=int, default=5, help="number of samples per datapoint")
-    parser.add_argument("--embedded-data-path", type=str, default=None, help="embedded data to load")
+    parser.add_argument("--embedded-data", type=str, default=os.path.join("results", "rf", "mnist_embeddings.npz"), help="path to embedded data to load")
     parser.add_argument("--seed", type=int, default=42, help="random seed")
     args = parser.parse_args()
 
@@ -25,24 +33,16 @@ if __name__ == "__main__":
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    
-    if(args.embedded_data_path is not None):
-        embedded_data = np.load(args.embedded_data_path)
-        X_train, y_train = embedded_data["X_train"], embedded_data["y_train"]
-        X_test, y_test = embedded_data["X_test"], embedded_data["y_test"]
-    else:
-        vae = ConvVAEModule.load_from_checkpoint(args.checkpoint).vae
-        vae.eval()
-        datamodule = DATAMODULES[args.dataset](batch_size=512)
-        datamodule.setup(None)
-
-        train_dataloader = datamodule.train_dataloader()
-        val_dataloader = datamodule.val_dataloader()
-        X_train, y_train = embed(vae, train_dataloader, n_samples=args.samples_per_image)
-        X_test, y_test = embed(vae, val_dataloader, deterministic=True)
-        X_train_deterministic, y_train_deterministic = embed(vae, train_dataloader, deterministic=True)
-        np.savez(os.path.join(args.output_dir, "embeddings"), X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, X_train_deterministic=X_train_deterministic, y_train_deterministic=y_train_deterministic)
-        
+    embedded_data = np.load(args.embedded_data)
+    mean_train = embedded_data["mean_train"]
+    logvar_train = embedded_data["logvar_train"]
+    y_train = embedded_data["y_train"]
+    X_val = embedded_data["mean_val"]
+    y_val = embedded_data["y_val"]
+    X_test = embedded_data["mean_test"]
+    y_test = embedded_data["y_test"]
+    X_train, y_train = sample_from_posterior(mean_train, logvar_train, y_train, deterministic=False, n_samples=args.samples_per_image)
+    X_train_deterministic, y_train_deterministic = sample_from_posterior(mean_train, logvar_train, y_train, deterministic=True, n_samples=1)
     
     rf = RandomForestClassifier(n_estimators=args.n_trees, random_state=args.seed)
     rf.fit(X_train, y_train)

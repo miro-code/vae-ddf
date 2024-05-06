@@ -10,8 +10,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from datasets import DATAMODULES
 #from datasets import DEBUGDATAMODULES as DATAMODULES #TODO change
 import os
-from utils import embed
-
+from vae_embed import embed_dataset
 
 if __name__ == "__main__":
     parser = ArgumentParser(prog="VAE for DDF", description="Train VAE for downstream use with differential decision forests")
@@ -81,28 +80,6 @@ if __name__ == "__main__":
         )
     trainer.test(datamodule=datamodule)
     
-    import numpy as np
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.metrics import accuracy_score
-    from sklearn.model_selection import train_test_split
-    vae = model.vae
-    train_dataloader = datamodule.train_dataloader()
-    val_dataloader = datamodule.val_dataloader()
-    X_train, y_train = embed(vae, train_dataloader)
-    X_train, _, y_train, _ = train_test_split(X_train, y_train, train_size=100, stratify=y_train)
-    X_test, y_test = embed(vae, val_dataloader, deterministic=True)
+    embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_dir=args.output_dir)
 
-    X_train_deterministic, y_train_deterministic = embed(vae, train_dataloader, deterministic=True)
-    np.savez(os.path.join(args.output_dir, "embeddings"), X_train=X_train, y_train=y_train, X_test=X_test, y_test=y_test, X_train_deterministic=X_train_deterministic, y_train_deterministic=y_train_deterministic)
-
-    rf = RandomForestClassifier(random_state=args.seed)
-    rf.fit(X_train, y_train)
-    y_pred = rf.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Multi-sample Accuracy: {acc}")
-
-    rf_deterministic = RandomForestClassifier(random_state=args.seed)
-    rf_deterministic.fit(X_train_deterministic, y_train_deterministic)
-    y_pred = rf_deterministic.predict(X_test)
-    acc = accuracy_score(y_test, y_pred)
-    print(f"Deterministic Accuracy: {acc}")
+    
