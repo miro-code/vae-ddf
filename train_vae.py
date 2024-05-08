@@ -8,7 +8,6 @@ from models import ConvVAEModule
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
 from datasets import DATAMODULES
-from datasets import DEBUGDATAMODULES as DATAMODULES #TODO change
 import os
 from vae_embed import embed_dataset
 

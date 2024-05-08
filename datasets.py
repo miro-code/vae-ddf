@@ -114,7 +114,7 @@ class CIFAR100DataModule(pl.LightningDataModule):
     def test_dataloader(self):
         return DataLoader(self.cifar100_test, batch_size=self.batch_size)
     
-class CIFAR10DebugDataModule(CIFAR10DataModule):
+class CIFAR100DebugDataModule(CIFAR10DataModule):
     def __init__(self, data_dir: str = "data", batch_size: int = 512):
         super().__init__(data_dir, batch_size)
 
@@ -134,5 +134,5 @@ DATAMODULES = {
 DEBUGDATAMODULES = {
     "mnist": MNISTDebugDataModule,
     "cifar10": CIFAR10DebugDataModule,
-    "cifar100": CIFAR100DataModule,
+    "cifar100": CIFAR100DebugDataModule,
 }
