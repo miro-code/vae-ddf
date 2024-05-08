@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, default=42, help="random seed")
     args = parser.parse_args()
     seed_everything(args.seed)
+    args.output_dir = os.path.join(args.output_dir, args.dataset, f"latent_dim_{args.latent_dim}")
     os.makedirs(args.output_dir, exist_ok=True)
     wandb_logger = WandbLogger(
     name=args.name,
