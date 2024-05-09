@@ -47,7 +47,7 @@ class RegressorNode(TreeNode):
             The input data to predict on, shape (n_samples, n_features x 2) where the first half of the features are the mean and the second half are the std.
         """
         if self.feature is None:
-            return self.value
+            return torch.tile(self.value, (X.shape[0], 1))
         else:
             left_weight = self.left_weight(X[:, self.feature], X[:, self.feature + X.shape[1] // 2], self.threshold).unsqueeze(1)
             left_prediction = self.children[0].predict(X)
@@ -60,7 +60,7 @@ class RegressorNode(TreeNode):
             The input data to predict on, shape (n_samples, n_features). Note that the input should not contain the standard deviation.
         """
         if self.feature is None:
-            return self.value
+            return torch.tile(self.value, (X.shape[0], 1))
         else:
             left_weight = X[:, self.feature] <= self.threshold
             left_weight = left_weight.float().unsqueeze(1)
@@ -80,7 +80,7 @@ class ClassifierNode(TreeNode):
             The input data to predict on, shape (n_samples, n_features x 2) where the first half of the features are the mean and the second half are the std.
         """
         if self.feature is None:
-            return self.value
+            return torch.tile(self.value, (X.shape[0], 1))
         else:
             left_weight = self.left_weight(X[:, self.feature], X[:, self.feature + X.shape[1] // 2], self.threshold).unsqueeze(1)
             left_prediction = self.children[0].predict_proba(X)
@@ -93,7 +93,7 @@ class ClassifierNode(TreeNode):
             The input data to predict on, shape (n_samples, n_features). Note that the input should not contain the standard deviation.
         """
         if self.feature is None:
-            return self.value
+            return torch.tile(self.value, (X.shape[0], 1))
         else:
             left_weight = X[:, self.feature] <= self.threshold
             left_weight = left_weight.float().unsqueeze(1)
