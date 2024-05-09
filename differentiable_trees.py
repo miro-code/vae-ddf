@@ -13,7 +13,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 
 class TreeNode:
-    def __init__(self, node_id : int | None = None, feature : int | None = None, threshold : torch.Tensor | None = None, value : torch.Tensor | None = None, children : List[Any] | None = None, level : int = 0):
+    def __init__(self, node_id : int | None = None, feature : int | None = None, threshold : torch.Tensor | None = None, value : torch.Tensor | None = None, children : List[Any] = [], level : int = 0):
         self.level = level
         self.node_id = node_id
         self.feature = feature
@@ -22,7 +22,7 @@ class TreeNode:
         self.children = children
 
     def get_depth(self):
-        if self.children is None:
+        if not self.children:
             return 0
         return 1 + max(child.get_depth() for child in self.children)
     
@@ -33,9 +33,17 @@ class TreeNode:
     def get_tree_parameters(self):
         if self.feature is not None:
             yield self.threshold
-        if(self.children is not None): 
+        if(self.children): 
             for child in self.children:
                 yield from child.get_tree_parameters()
+
+    def get_tree_nodes(self):
+        if not self.children:
+            return [self]
+        result = [self]
+        for child in self.children:
+            result.extend(child.get_tree())
+        return result
 
 class RegressorNode(TreeNode):
     def __init__(self, node_id : int | None = None, feature : int | None = None, threshold : torch.Tensor | None = None, value : torch.Tensor | None = None, children : List[Any] | None = None, level : int = 0):
@@ -154,7 +162,7 @@ class SKLearnTreeWrapper(nn.Module):
             if current_level_thresholds:
                 thresholds_by_level.append(current_level_thresholds)
             for node in current_nodes:
-                if node.children is not None:
+                if node.children:
                     next_nodes.extend(node.children)
         return thresholds_by_level
 
@@ -171,7 +179,7 @@ class SKLearnTreeWrapper(nn.Module):
             for node in current_nodes:
                 if node.level == level:
                     result.append(node.threshold)
-                if node.level < level and node.children is not None:
+                if node.level < level and node.children:
                     next_nodes.extend(node.children)
         return result
     
@@ -181,6 +189,7 @@ class DifferentiableTreeRegressor(SKLearnTreeWrapper):
         Wraps an sklearn decision tree and provides its tree structure.
         """
         super().__init__(dt)
+
 
     def predict(self, X : torch.Tensor) -> torch.Tensor:
         return self.differentiable_tree.predict(X)
