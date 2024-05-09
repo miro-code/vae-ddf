@@ -1,3 +1,6 @@
-train_vae.py --latent-dim 16
-train_vae.py --latent-dim 8
-train_vae.py --latent-dim 16 --dataset cifar10
+train_df.py --n_estimators=100
+train_df.py --n_estimators=200
+train_df.py --n_estimators=300
+train_df.py --n_estimators=1000
+
+

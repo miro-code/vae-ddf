@@ -80,7 +80,7 @@ if __name__ == "__main__":
         )
     trainer.test(datamodule=datamodule)
 
-    embeddings_path = os.path.join(args.output_dir, args.dataset + "_embeddings.npz")
+    embeddings_path = os.path.join(args.output_dir, "embeddings.npz")
     embed_dataset(model.vae, dataset=args.dataset, batch_size=args.batch_size, output_path=embeddings_path, device=device)
 
     
